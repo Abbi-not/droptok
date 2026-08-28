@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>DropTok — watch it, want it, get it</title>
+<style>
+  :root{
+    --bg:#0B0B0D;
+    --surface:#16161B;
+    --surface-2:#1E1E25;
+    --line:#2A2A32;
+    --text:#F5F3EF;
+    --text-dim:#9A97A3;
+    --accent:#FF4D2E;
+    --accent-2:#FFC93C;
+    --success:#37D67A;
+    --danger:#FF5C7A;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  #app{
+    max-width:460px;
+    height:100vh;
+    height:100dvh;
+    margin:0 auto;
+    position:relative;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px 10px;
+    z-index:20;
+  }
+  .logo{
+    font-weight:800; font-size:20px; letter-spacing:-0.03em;
+    display:flex; align-items:center; gap:6px;
+  }
+  .logo .dot{color:var(--accent);}
+  .tabs{display:flex; gap:18px; font-size:14px; font-weight:600; color:var(--text-dim);}
+  .tabs .active{color:var(--text);}
+  .profile-btn{
+    width:34px;height:34px;border-radius:50%;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid var(--line);
+    cursor:pointer;
+  }
+
+  /* ---------- Feed ---------- */
+  .view{ flex:1; min-height:0; display:none; }
+  .view.active{ display:flex; flex-direction:column; }
+
+  #feedScroll{
+    flex:1; overflow-y:scroll; scroll-snap-type:y mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .slide{
+    scroll-snap-align:start;
+    height:100%; min-height:100%;
+    position:relative;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    background:linear-gradient(160deg,#1c1620,#0B0B0D 55%);
+    overflow:hidden;
+  }
+  .slide .bigemoji{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:150px; opacity:0.9; filter:drop-shadow(0 10px 40px rgba(0,0,0,.5));
+  }
+  .slide .badgebar{
+    position:absolute; top:14px; left:14px; display:flex; gap:6px; z-index:2;
+  }
+  .badge{
+    font-size:11px; font-weight:800; padding:5px 10px; border-radius:100px;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .badge.sponsored{background:var(--accent-2); color:#241a00;}
+  .badge.challenge{background:var(--accent); color:#fff;}
+  .badge.discount{background:var(--success); color:#04220f;}
+
+  .rightrail{
+    position:absolute; right:12px; bottom:150px; display:flex; flex-direction:column; gap:18px;
+    align-items:center; z-index:3;
+  }
+  .rail-btn{
+    background:rgba(20,20,24,.6); backdrop-filter:blur(6px);
+    border:1px solid var(--line); width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text);
+    cursor:pointer;
+  }
+  .rail-btn.liked{color:var(--accent); border-color:var(--accent);}
+  .rail-count{font-size:11px; color:var(--text-dim); margin-top:-10px; font-weight:600;}
+
+  .slide-info{
+    position:relative; z-index:2; padding:18px 16px 16px;
+    background:linear-gradient(0deg, rgba(0,0,0,.85) 20%, rgba(0,0,0,0) 100%);
+    padding-top:60px;
+  }
+  .rest-row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .rest-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid var(--line);
+  }
+  .rest-name{font-weight:700; font-size:14px;}
+  .rest-dist{color:var(--text-dim); font-size:12px;}
+  .caption{font-size:14.5px; line-height:1.4; margin:0 0 14px; max-width:88%;}
+
+  .product-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; display:flex; align-items:center; gap:12px;
+  }
+  .product-info{flex:1; min-width:0;}
+  .product-name{font-weight:700; font-size:14px;}
+  .product-price{color:var(--accent-2); font-weight:800; font-size:15px; margin-top:2px;}
+  .product-price .old{color:var(--text-dim); text-decoration:line-through; font-weight:600; font-size:12px; margin-left:6px;}
+  .btn{
+    border:none; border-radius:100px; font-weight:800; cursor:pointer; font-size:13px;
+    padding:11px 16px; white-space:nowrap;
+  }
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-primary:active{transform:scale(.96);}
+  .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--line);}
+  .btn-gold{background:var(--accent-2); color:#241a00;}
+  .btn-block{width:100%; padding:14px; font-size:15px;}
+  .btn-sm{padding:7px 12px; font-size:12px;}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  /* ---------- Bottom nav ---------- */
+  .bottomnav{
+    display:flex; border-top:1px solid var(--line); background:var(--bg); z-index:30;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .navbtn{
+    flex:1; text-align:center; padding:10px 0 8px; font-size:10.5px; font-weight:700;
+    color:var(--text-dim); cursor:pointer; position:relative;
+  }
+  .navbtn .ic{font-size:20px; display:block; margin-bottom:2px;}
+  .navbtn.active{color:var(--text);}
+  .navbtn .pill{
+    position:absolute; top:2px; right:calc(50% - 20px); background:var(--accent); color:#fff;
+    font-size:9px; font-weight:800; border-radius:10px; padding:1px 5px;
+  }
+
+  /* ---------- Generic list views ---------- */
+  .scrollpane{flex:1; overflow-y:auto; padding:14px 16px 90px;}
+  .section-title{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); margin:18px 0 10px;}
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; margin-bottom:10px;
+  }
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .muted{color:var(--text-dim); font-size:12.5px;}
+  input, select, textarea{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--text);
+    padding:12px 13px; border-radius:12px; font-size:14px; margin-bottom:10px; font-family:inherit;
+  }
+  label{font-size:12px; font-weight:700; color:var(--text-dim); margin-bottom:4px; display:block;}
+  .empty{text-align:center; padding:60px 20px; color:var(--text-dim);}
+  .empty .ic{font-size:44px; display:block; margin-bottom:10px;}
+
+  .status-chip{
+    font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; text-transform:capitalize;
+  }
+  .status-placed{background:#3a3450; color:#c8b8ff;}
+  .status-accepted, .status-preparing{background:#3a3020; color:var(--accent-2);}
+  .status-picked_up, .status-delivering{background:#20303a; color:#7fd1ff;}
+  .status-delivered{background:#173a24; color:var(--success);}
+  .status-cancelled{background:#3a1a1a; color:var(--danger);}
+
+  /* ---------- Modal / sheet ---------- */
+  .overlay{
+    position:absolute; inset:0; background:rgba(0,0,0,.6); z-index:50; display:none;
+    align-items:flex-end; justify-content:center;
+  }
+  .overlay.active{display:flex;}
+  .sheet{
+    background:var(--surface); width:100%; max-width:460px; border-radius:22px 22px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom)); max-height:85%; overflow-y:auto;
+    border:1px solid var(--line); border-bottom:none;
+  }
+  .sheet h2{margin:0 0 4px; font-size:19px;}
+  .sheet-sub{color:var(--text-dim); font-size:13px; margin-bottom:16px;}
+  .close-x{position:absolute; top:14px; right:16px; font-size:22px; color:var(--text-dim); cursor:pointer;}
+  .role-toggle{display:flex; gap:8px; margin-bottom:14px;}
+  .role-opt{
+    flex:1; text-align:center; padding:10px; border-radius:12px; border:1px solid var(--line);
+    font-size:12px; font-weight:700; cursor:pointer; color:var(--text-dim);
+  }
+  .role-opt.active{border-color:var(--accent); color:var(--accent); background:rgba(255,77,46,.08);}
+  .toast{
+    position:absolute; bottom:90px; left:50%; transform:translateX(-50%);
+    background:var(--text); color:#111; padding:10px 18px; border-radius:100px;
+    font-size:13px; font-weight:700; z-index:80; opacity:0; transition:opacity .2s, transform .2s;
+    pointer-events:none; white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+  ::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar" id="topbar">
+    <div class="logo">Drop<span class="dot">Tok</span></div>
+    <div class="profile-btn" id="profileBtn">👤</div>
+  </div>
+
+  <!-- FEED -->
+  <div class="view active" id="view-feed">
+    <div id="feedScroll"></div>
+  </div>
+
+  <!-- NEARBY -->
+  <div class="view" id="view-nearby">
+    <div class="scrollpane" id="nearbyPane"></div>
+  </div>
+
+  <!-- CART -->
+  <div class="view" id="view-cart">
+    <div class="scrollpane" id="cartPane"></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="view" id="view-orders">
+    <div class="scrollpane" id="ordersPane"></div>
+  </div>
+
+  <!-- DASHBOARD (role-adaptive: restaurant / rider / admin) -->
+  <div class="view" id="view-dash">
+    <div class="scrollpane" id="dashPane"></div>
+  </div>
+
+  <div class="bottomnav" id="bottomnav"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- AUTH SHEET -->
+  <div class="overlay" id="authOverlay">
+    <div class="sheet">
+      <span class="close-x" onclick="closeAuth()">✕</span>
+      <h2 id="authTitle">Log in</h2>
+      <div class="sheet-sub">Order what you watch. Sell what you cook.</div>
+      <div id="authSignupOnly">
+        <label>I am a</label>
+        <div class="role-toggle" id="roleToggle">
+          <div class="role-opt active" data-role="customer">🍔 Customer</div>
+          <div class="role-opt" data-role="restaurant_owner">👨‍🍳 Restaurant</div>
+          <div class="role-opt" data-role="rider">🛵 Rider</div>
+        </div>
+        <label>Full name</label>
+        <input id="authName" placeholder="e.g. Bethel Girma" />
+      </div>
+      <label>Phone number</label>
+      <input id="authPhone" placeholder="09xxxxxxxx" />
+      <label>Password</label>
+      <input id="authPassword" type="password" placeholder="••••••••" />
+      <button class="btn btn-primary btn-block" id="authSubmitBtn" onclick="submitAuth()">Log in</button>
+      <div style="text-align:center; margin-top:14px; font-size:13px; color:var(--text-dim);">
+        <span id="authSwitchLabel">New here?</span>
+        <a href="#" id="authSwitchLink" onclick="toggleAuthMode(event)" style="color:var(--accent); font-weight:700; text-decoration:none;">Create an account</a>
+      </div>
+      <div style="text-align:center; margin-top:16px; font-size:11.5px; color:var(--text-dim); line-height:1.6;">
+        Demo logins — Customer: 0911111111 / pass123 · Owner: 0933333333 / pass123<br/>
+        Rider: 0966666666 / pass123 · Admin: 0900000000 / admin123
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+let state = {
+  token: localStorage.getItem('droptok_token') || null,
+  user: JSON.parse(localStorage.getItem('droptok_user') || 'null'),
+  cartCount: 0,
+  authMode: 'login',
+  myRestaurant: null,
+};
+
+// ---------------- API helper ----------------
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  const res = await fetch(API + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ---------------- Nav ----------------
+const NAV_ITEMS = {
+  guestOrCustomer: [
+    { id: 'feed', ic: '🎬', label: 'Feed' },
+    { id: 'nearby', ic: '📍', label: 'Nearby' },
+    { id: 'cart', ic: '🛒', label: 'Cart' },
+    { id: 'orders', ic: '🧾', label: 'Orders' },
+  ],
+  restaurant_owner: [
+    { id: 'feed', ic: '🎬', label: 'Feed' },
+    { id: 'nearby', ic: '📍', label: 'Nearby' },
+    { id: 'dash', ic: '🏪', label: 'My Shop' },
+    { id: 'orders', ic: '🧾', label: 'Orders' },
+  ],
+  rider: [
+    { id: 'feed', ic: '🎬', label: 'Feed' },
+    { id: 'dash', ic: '🛵', label: 'Deliveries' },
+    { id: 'orders', ic: '🧾', label: 'History' },
+  ],
+  admin: [
+    { id: 'feed', ic: '🎬', label: 'Feed' },
+    { id: 'dash', ic: '📊', label: 'Admin' },
+  ],
+};
+
+function currentNav() {
+  if (!state.user) return NAV_ITEMS.guestOrCustomer;
+  return NAV_ITEMS[state.user.role] || NAV_ITEMS.guestOrCustomer;
+}
+
+let activeView = 'feed';
+function renderNav() {
+  const nav = document.getElementById('bottomnav');
+  nav.innerHTML = '';
+  currentNav().forEach(item => {
+    const btn = document.createElement('div');
+    btn.className = 'navbtn' + (activeView === item.id ? ' active' : '');
+    btn.innerHTML = `<span class="ic">${item.ic}</span>${item.label}` +
+      (item.id === 'cart' && state.cartCount > 0 ? `<span class="pill">${state.cartCount}</span>` : '');
+    btn.onclick = () => switchView(item.id);
+    nav.appendChild(btn);
+  });
+}
+
+function switchView(id) {
+  if ((id === 'cart' || id === 'orders' || id === 'dash') && !state.user) {
+    return openAuth('login');
+  }
+  activeView = id;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  renderNav();
+  if (id === 'nearby') loadNearby();
+  if (id === 'cart') loadCart();
+  if (id === 'orders') loadOrders();
+  if (id === 'dash') loadDash();
+}
+
+document.getElementById('profileBtn').onclick = () => {
+  if (!state.user) return openAuth('login');
+  const menu = confirm(`Logged in as ${state.user.name} (${state.user.role.replace('_',' ')}).\n\nPress OK to log out.`);
+  if (menu) logout();
+};
+
+function logout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('droptok_token'); localStorage.removeItem('droptok_user');
+  toast('Logged out');
+  switchView('feed');
+  loadFeed();
+}
+
+// ---------------- Auth ----------------
+function openAuth(mode) {
+  state.authMode = mode;
+  document.getElementById('authOverlay').classList.add('active');
+  updateAuthUI();
+}
+function closeAuth() { document.getElementById('authOverlay').classList.remove('active'); }
+function toggleAuthMode(e) { e.preventDefault(); state.authMode = state.authMode === 'login' ? 'signup' : 'login'; updateAuthUI(); }
+function updateAuthUI() {
+  const isLogin = state.authMode === 'login';
+  document.getElementById('authTitle').textContent = isLogin ? 'Log in' : 'Create your account';
+  document.getElementById('authSignupOnly').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('authSubmitBtn').textContent = isLogin ? 'Log in' : 'Sign up';
+  document.getElementById('authSwitchLabel').textContent = isLogin ? 'New here?' : 'Already have an account?';
+  document.getElementById('authSwitchLink').textContent = isLogin ? 'Create an account' : 'Log in';
+}
+document.querySelectorAll('.role-opt').forEach(el => {
+  el.onclick = () => {
+    document.querySelectorAll('.role-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+  };
+});
+
+async function submitAuth() {
+  const phone = document.getElementById('authPhone').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!phone || !password) return toast('Enter phone and password');
+  try {
+    let data;
+    if (state.authMode === 'login') {
+      data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password }) });
+    } else {
+      const name = document.getElementById('authName').value.trim();
+      const role = document.querySelector('.role-opt.active').dataset.role;
+      if (!name) return toast('Enter your name');
+      data = await api('/auth/signup', { method: 'POST', body: JSON.stringify({ name, phone, password, role, lat: 9.03, lng: 38.74 }) });
+    }
+    state.token = data.token; state.user = data.user;
+    localStorage.setItem('droptok_token', data.token);
+    localStorage.setItem('droptok_user', JSON.stringify(data.user));
+    closeAuth();
+    toast(`Welcome, ${data.user.name.split(' ')[0]}!`);
+    renderNav();
+    loadFeed();
+    loadCartCount();
+  } catch (e) { toast(e.message); }
+}
+
+// ---------------- Feed ----------------
+function productTag(v) {
+  if (!v.product) return '';
+  const priced = v.discount_pct > 0
+    ? `<span class="old">${v.product.price_etb} ETB</span> ${Math.round(v.product.price_etb * (1 - v.discount_pct/100))} ETB`
+    : `${v.product.price_etb} ETB`;
+  return `
+    <div class="product-card">
+      <div class="product-info">
+        <div class="product-name">${v.product.name}</div>
+        <div class="product-price">${priced}</div>
+      </div>
+      <button class="btn btn-primary" onclick="quickAdd(${v.product.id})">Add to cart</button>
+    </div>`;
+}
+
+function slideHTML(v) {
+  const badges = [
+    v.sponsored ? `<span class="badge sponsored">Sponsored</span>` : '',
+    v.is_challenge ? `<span class="badge challenge">🌶️ Challenge</span>` : '',
+    v.discount_pct > 0 ? `<span class="badge discount">${v.discount_pct}% OFF</span>` : '',
+  ].join('');
+  return `
+    <div class="slide" data-video-id="${v.id}">
+      <div class="badgebar">${badges}</div>
+      <div class="bigemoji">${v.thumbnail_emoji || '🎬'}</div>
+      <div class="rightrail">
+        <div>
+          <div class="rail-btn ${v.liked ? 'liked' : ''}" onclick="toggleLike(${v.id}, this)">❤️</div>
+          <div class="rail-count" id="likecount-${v.id}">${v.likes_count}</div>
+        </div>
+        <div class="rail-btn" onclick="promptOrderThis(${v.id})">⚡</div>
+        <div class="rail-btn" onclick="openComments(${v.id})">💬</div>
+      </div>
+      <div class="slide-info">
+        <div class="rest-row">
+          <div class="rest-avatar">${v.restaurant ? v.restaurant.avatar_emoji : '🍽️'}</div>
+          <div>
+            <div class="rest-name">${v.restaurant ? v.restaurant.name : 'DropTok'}</div>
+            <div class="rest-dist">${v.distance_km != null ? v.distance_km + ' km away · ' : ''}⭐ ${v.restaurant ? v.restaurant.rating : '—'}</div>
+          </div>
+        </div>
+        <p class="caption">${v.caption || ''}</p>
+        ${productTag(v)}
+      </div>
+    </div>`;
+}
+
+async function loadFeed() {
+  const scroll = document.getElementById('feedScroll');
+  scroll.innerHTML = `<div class="empty">Loading feed…</div>`;
+  try {
+    const videos = await api('/feed?lat=9.03&lng=38.74');
+    if (!videos.length) { scroll.innerHTML = `<div class="empty"><span class="ic">🎬</span>No videos yet</div>`; return; }
+    scroll.innerHTML = videos.map(slideHTML).join('');
+  } catch (e) { scroll.innerHTML = `<div class="empty">Couldn't load feed</div>`; }
+}
+
+async function toggleLike(videoId, el) {
+  if (!state.user) return openAuth('login');
+  try {
+    const res = await api(`/videos/${videoId}/like`, { method: 'POST' });
+    el.classList.toggle('liked', res.liked);
+    const countEl = document.getElementById('likecount-' + videoId);
+    countEl.textContent = parseInt(countEl.textContent) + (res.liked ? 1 : -1);
+  } catch (e) { toast(e.message); }
+}
+
+async function quickAdd(productId) {
+  if (!state.user) return openAuth('login');
+  try {
+    const cart = await api('/cart/add', { method: 'POST', body: JSON.stringify({ product_id: productId, quantity: 1 }) });
+    state.cartCount = cart.items.reduce((s, i) => s + i.quantity, 0);
+    renderNav();
+    toast('Added to cart 🛒');
+  } catch (e) {
+    if (e.message.includes('another restaurant')) {
+      if (confirm('Your cart has items from a different restaurant. Clear cart and add this instead?')) {
+        await api('/cart', { method: 'DELETE' });
+        await quickAdd(productId);
+      }
+    } else toast(e.message);
+  }
+}
+
+async function promptOrderThis(videoId) {
+  if (!state.user) return openAuth('login');
+  if (!confirm('Order this exact item right now? (skips the cart)')) return;
+  try {
+    const order = await api(`/videos/${videoId}/order-this`, { method: 'POST', body: JSON.stringify({ quantity: 1 }) });
+    toast(`Order #${order.id} placed! 🎉`);
+  } catch (e) { toast(e.message); }
+}
+
+async function openComments(videoId) {
+  try {
+    const comments = await api(`/videos/${videoId}/comments`);
+    let list = comments.map(c => `★ ${c.rating || ''} ${c.user_name}: ${c.text}`).join('\n') || 'No comments yet.';
+    const text = prompt(list + '\n\nAdd a comment:');
+    if (text) {
+      if (!state.user) return openAuth('login');
+      await api(`/videos/${videoId}/comments`, { method: 'POST', body: JSON.stringify({ text }) });
+      toast('Comment posted');
+    }
+  } catch (e) { toast(e.message); }
+}
+
+// ---------------- Nearby ----------------
+async function loadNearby() {
+  const pane = document.getElementById('nearbyPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const videos = await api('/nearby?lat=9.03&lng=38.74');
+    pane.innerHTML = `<div class="section-title">🔥 What's popping near you</div>` + videos.map(v => `
+      <div class="card">
+        <div class="row">
+          <div class="row" style="gap:10px;">
+            <div class="rest-avatar">${v.restaurant.avatar_emoji}</div>
+            <div>
+              <div style="font-weight:700; font-size:14px;">${v.restaurant.name}</div>
+              <div class="muted">${v.distance_km} km away · ⭐ ${v.restaurant.rating}</div>
+            </div>
+          </div>
+          <div class="muted">${v.caption ? v.caption.slice(0, 30) + '…' : ''}</div>
+        </div>
+        ${v.product ? `
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <div style="font-weight:700; font-size:13.5px;">${v.product.name}</div>
+            <div style="color:var(--accent-2); font-weight:800;">${v.product.price_etb} ETB</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="quickAdd(${v.product.id})">Add</button>
+        </div>` : ''}
+      </div>`).join('');
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load nearby</div>`; }
+}
+
+// ---------------- Cart ----------------
+async function loadCartCount() {
+  if (!state.user) { state.cartCount = 0; return; }
+  try {
+    const cart = await api('/cart');
+    state.cartCount = cart.items.reduce((s, i) => s + i.quantity, 0);
+    renderNav();
+  } catch (e) {}
+}
+
+async function loadCart() {
+  const pane = document.getElementById('cartPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const cart = await api('/cart');
+    state.cartCount = cart.items.reduce((s, i) => s + i.quantity, 0);
+    renderNav();
+    if (!cart.items.length) {
+      pane.innerHTML = `<div class="empty"><span class="ic">🛒</span>Your cart is empty<br/><br/><button class="btn btn-ghost" onclick="switchView('feed')">Browse the feed</button></div>`;
+      return;
+    }
+    pane.innerHTML = `<div class="section-title">Your order</div>` + cart.items.map(i => `
+      <div class="card row">
+        <div>
+          <div style="font-weight:700; font-size:14px;">${i.name}</div>
+          <div class="muted">${i.price_etb} ETB × ${i.quantity}</div>
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="changeQty(${i.cart_item_id}, ${i.quantity - 1})">−</button>
+          <span style="font-weight:700; min-width:16px; text-align:center;">${i.quantity}</span>
+          <button class="btn btn-ghost btn-sm" onclick="changeQty(${i.cart_item_id}, ${i.quantity + 1})">+</button>
+        </div>
+      </div>`).join('') + `
+      <div class="card">
+        <div class="row"><span class="muted">Subtotal</span><span>${cart.subtotal_etb} ETB</span></div>
+        <div class="row"><span class="muted">Delivery fee</span><span>39 ETB</span></div>
+        <div class="row" style="font-weight:800; font-size:16px; margin-top:6px;"><span>Total</span><span>${cart.subtotal_etb + 39} ETB</span></div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="checkout()">Checkout · ${cart.subtotal_etb + 39} ETB</button>`;
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load cart</div>`; }
+}
+
+async function changeQty(itemId, qty) {
+  try { await api(`/cart/${itemId}`, { method: 'PATCH', body: JSON.stringify({ quantity: qty }) }); loadCart(); }
+  catch (e) { toast(e.message); }
+}
+
+async function checkout() {
+  try {
+    const order = await api('/orders/checkout', { method: 'POST' });
+    toast(`Order #${order.id} placed! 🎉`);
+    state.cartCount = 0; renderNav();
+    switchView('orders');
+  } catch (e) { toast(e.message); }
+}
+
+// ---------------- Orders ----------------
+const STATUS_FLOW = ['placed','accepted','preparing','picked_up','delivering','delivered'];
+function statusBar(status) {
+  if (status === 'cancelled') return `<span class="status-chip status-cancelled">Cancelled</span>`;
+  const idx = STATUS_FLOW.indexOf(status);
+  return STATUS_FLOW.map((s, i) => `<span class="status-chip status-${s}" style="opacity:${i <= idx ? 1 : 0.3}">${s.replace('_',' ')}</span>`).join(' ');
+}
+
+async function loadOrders() {
+  const pane = document.getElementById('ordersPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const orders = await api('/my/orders');
+    if (!orders.length) { pane.innerHTML = `<div class="empty"><span class="ic">🧾</span>No orders yet</div>`; return; }
+    pane.innerHTML = `<div class="section-title">Your orders</div>` + orders.map(o => `
+      <div class="card">
+        <div class="row">
+          <div style="font-weight:800;">Order #${o.id} · ${o.restaurant.name}</div>
+          <div style="font-weight:800; color:var(--accent-2);">${o.total_etb} ETB</div>
+        </div>
+        <div class="muted" style="margin:6px 0 10px;">${o.items.map(i => i.quantity + '× ' + i.name_snapshot).join(', ')}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">${statusBar(o.status)}</div>
+        ${['placed','accepted'].includes(o.status) ? `<button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="cancelOrder(${o.id})">Cancel order</button>` : ''}
+      </div>`).join('');
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load orders</div>`; }
+}
+async function cancelOrder(id) {
+  try { await api(`/orders/${id}/cancel`, { method: 'POST' }); toast('Order cancelled'); loadOrders(); }
+  catch (e) { toast(e.message); }
+}
+
+// ---------------- Dashboard (restaurant / rider / admin) ----------------
+async function loadDash() {
+  if (!state.user) return;
+  if (state.user.role === 'restaurant_owner') return loadRestaurantDash();
+  if (state.user.role === 'rider') return loadRiderDash();
+  if (state.user.role === 'admin') return loadAdminDash();
+}
+
+async function loadRestaurantDash() {
+  const pane = document.getElementById('dashPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const mine = await api('/my/restaurants');
+    if (!mine.length) {
+      pane.innerHTML = `
+        <div class="section-title">Open your shop</div>
+        <div class="card">
+          <label>Restaurant name</label><input id="newRestName" placeholder="e.g. Burger Lab" />
+          <label>Short bio</label><input id="newRestBio" placeholder="What makes it special?" />
+          <label>Emoji icon</label><input id="newRestEmoji" placeholder="🍔" value="🍔" />
+          <button class="btn btn-primary btn-block" onclick="createRestaurant()">Create restaurant</button>
+        </div>`;
+      return;
+    }
+    const r = mine[0];
+    state.myRestaurant = r;
+    const products = (await api(`/restaurants/${r.id}`)).products;
+    const orders = await api(`/restaurants/${r.id}/orders`);
+    pane.innerHTML = `
+      <div class="card row">
+        <div class="row" style="gap:10px;"><div class="rest-avatar">${r.avatar_emoji}</div><div><div style="font-weight:800;">${r.name}</div><div class="muted">⭐ ${r.rating}</div></div></div>
+      </div>
+      <div class="section-title">Menu</div>
+      ${products.map(p => `<div class="card row"><div><div style="font-weight:700;">${p.name}</div><div class="muted">${p.description||''}</div></div><div style="font-weight:800; color:var(--accent-2);">${p.price_etb} ETB</div></div>`).join('') || `<div class="muted">No products yet.</div>`}
+      <div class="card">
+        <label>New product name</label><input id="newProdName" placeholder="e.g. Spicy Wings" />
+        <label>Price (ETB)</label><input id="newProdPrice" type="number" placeholder="250" />
+        <button class="btn btn-ghost btn-block" onclick="addProduct(${r.id})">+ Add product</button>
+      </div>
+      <div class="card">
+        <label>Post a shoppable video</label>
+        <select id="newVidProduct">${products.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}</select>
+        <input id="newVidCaption" placeholder="Caption, e.g. NEW spicy pizza 🔥" />
+        <input id="newVidEmoji" placeholder="Emoji, e.g. 🍕" value="🎥" />
+        <button class="btn btn-primary btn-block" onclick="postVideo(${r.id})">Post video</button>
+      </div>
+      <div class="section-title">Incoming orders</div>
+      ${orders.length ? orders.map(o => `
+        <div class="card">
+          <div class="row"><div style="font-weight:800;">Order #${o.id}</div><div class="status-chip status-${o.status}">${o.status.replace('_',' ')}</div></div>
+          <div class="muted" style="margin:6px 0 10px;">${o.items.map(i => i.quantity + '× ' + i.name_snapshot).join(', ')} · ${o.total_etb} ETB</div>
+          ${o.status === 'placed' ? `<button class="btn btn-primary btn-sm" onclick="updateRestOrder(${r.id},${o.id},'accepted')">Accept order</button>` : ''}
+          ${o.status === 'accepted' ? `<button class="btn btn-primary btn-sm" onclick="updateRestOrder(${r.id},${o.id},'preparing')">Start preparing</button>` : ''}
+          ${o.status === 'preparing' ? `<span class="muted">Waiting for a rider to pick up…</span>` : ''}
+        </div>`).join('') : `<div class="muted">No orders yet.</div>`}
+    `;
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load dashboard</div>`; }
+}
+async function createRestaurant() {
+  const name = document.getElementById('newRestName').value.trim();
+  const bio = document.getElementById('newRestBio').value.trim();
+  const avatar_emoji = document.getElementById('newRestEmoji').value.trim() || '🍽️';
+  if (!name) return toast('Enter a restaurant name');
+  try {
+    await api('/restaurants', { method: 'POST', body: JSON.stringify({ name, bio, avatar_emoji, lat: 9.03, lng: 38.74 }) });
+    toast('Restaurant created!'); loadRestaurantDash();
+  } catch (e) { toast(e.message); }
+}
+async function addProduct(restId) {
+  const name = document.getElementById('newProdName').value.trim();
+  const price_etb = parseFloat(document.getElementById('newProdPrice').value);
+  if (!name || !price_etb) return toast('Enter product name and price');
+  try {
+    await api(`/restaurants/${restId}/products`, { method: 'POST', body: JSON.stringify({ name, price_etb }) });
+    toast('Product added'); loadRestaurantDash();
+  } catch (e) { toast(e.message); }
+}
+async function postVideo(restId) {
+  const product_id = parseInt(document.getElementById('newVidProduct').value);
+  const caption = document.getElementById('newVidCaption').value.trim();
+  const thumbnail_emoji = document.getElementById('newVidEmoji').value.trim() || '🎥';
+  try {
+    await api(`/restaurants/${restId}/videos`, { method: 'POST', body: JSON.stringify({ product_id, caption, thumbnail_emoji }) });
+    toast('Video posted to the feed!'); loadRestaurantDash();
+  } catch (e) { toast(e.message); }
+}
+async function updateRestOrder(restId, orderId, status) {
+  try { await api(`/restaurants/${restId}/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }); loadRestaurantDash(); }
+  catch (e) { toast(e.message); }
+}
+
+async function loadRiderDash() {
+  const pane = document.getElementById('dashPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const [available, earnings] = await Promise.all([api('/rider/available-orders'), api('/rider/earnings')]);
+    pane.innerHTML = `
+      <div class="card row">
+        <div><div class="muted">Total earned</div><div style="font-size:22px; font-weight:800; color:var(--accent-2);">${earnings.total_earned_etb} ETB</div></div>
+        <div><div class="muted">Completed</div><div style="font-size:22px; font-weight:800;">${earnings.completed_deliveries}</div></div>
+      </div>
+      <div class="section-title">In progress</div>
+      ${earnings.in_progress.length ? earnings.in_progress.map(o => `
+        <div class="card">
+          <div class="row"><div style="font-weight:800;">#${o.id} · ${o.restaurant.name}</div><div class="status-chip status-${o.status}">${o.status.replace('_',' ')}</div></div>
+          <div class="muted" style="margin:6px 0 10px;">${o.items.map(i=>i.quantity+'× '+i.name_snapshot).join(', ')}</div>
+          ${o.status === 'picked_up' ? `<button class="btn btn-primary btn-sm" onclick="riderStatus(${o.id},'delivering')">Start delivering</button>` : ''}
+          ${o.status === 'delivering' ? `<button class="btn btn-primary btn-sm" onclick="riderStatus(${o.id},'delivered')">Mark delivered</button>` : ''}
+        </div>`).join('') : `<div class="muted">Nothing in progress.</div>`}
+      <div class="section-title">Available for pickup</div>
+      ${available.length ? available.map(o => `
+        <div class="card">
+          <div style="font-weight:800;">#${o.id} · ${o.restaurant.name}</div>
+          <div class="muted" style="margin:6px 0 10px;">${o.items.map(i=>i.quantity+'× '+i.name_snapshot).join(', ')} · fee ${Math.round(o.delivery_fee_etb*0.8)} ETB</div>
+          <button class="btn btn-primary btn-sm" onclick="acceptDelivery(${o.id})">Accept delivery</button>
+        </div>`).join('') : `<div class="muted">No orders ready right now.</div>`}
+    `;
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load deliveries</div>`; }
+}
+async function acceptDelivery(orderId) {
+  try { await api(`/rider/orders/${orderId}/accept`, { method: 'POST' }); toast('Delivery accepted'); loadRiderDash(); }
+  catch (e) { toast(e.message); }
+}
+async function riderStatus(orderId, status) {
+  try { await api(`/rider/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }); loadRiderDash(); }
+  catch (e) { toast(e.message); }
+}
+
+async function loadAdminDash() {
+  const pane = document.getElementById('dashPane');
+  pane.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const report = await api('/admin/reports');
+    pane.innerHTML = `
+      <div class="section-title">Platform revenue</div>
+      <div class="card row">
+        <div><div class="muted">Commission</div><div style="font-size:18px; font-weight:800; color:var(--accent-2);">${report.commission_revenue_etb} ETB</div></div>
+        <div><div class="muted">Delivery cut</div><div style="font-size:18px; font-weight:800; color:var(--accent-2);">${Math.round(report.delivery_revenue_etb*0.2)} ETB</div></div>
+        <div><div class="muted">Total orders</div><div style="font-size:18px; font-weight:800;">${report.total_orders}</div></div>
+      </div>
+      <div class="section-title">Top restaurants</div>
+      ${report.top_restaurants.map(r => `<div class="card row"><span>${r.name}</span><span class="muted">${r.order_count} orders · ${r.revenue_etb} ETB</span></div>`).join('')}
+    `;
+  } catch (e) { pane.innerHTML = `<div class="empty">Couldn't load admin data</div>`; }
+}
+
+// ---------------- Init ----------------
+renderNav();
+loadFeed();
+loadCartCount();
+</script>
+</body>
+</html>

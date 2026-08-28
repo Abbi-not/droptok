@@ -1,0 +1,6 @@
+node_modules/
+droptok.db
+droptok.db-shm
+droptok.db-wal
+.env
+*.log

@@ -1,0 +1,7 @@
+node_modules
+droptok.db
+droptok.db-shm
+droptok.db-wal
+*.log
+.env
+.git
