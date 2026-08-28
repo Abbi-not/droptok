@@ -8,11 +8,5 @@ services:
     envVars:
       - key: JWT_SECRET
         generateValue: true
-      - key: DB_PATH
-        value: /var/data/droptok.db
       - key: NODE_VERSION
         value: 20.11.0
-    disk:
-      name: droptok-data
-      mountPath: /var/data
-      sizeGB: 1
