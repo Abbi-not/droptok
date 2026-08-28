@@ -1,14 +1,14 @@
-const Database = require('better-sqlite3');
+const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
 // On most hosts the app's own directory is fine for SQLite. On platforms with
-// an attached persistent disk (e.g. Render), set DB_PATH to the disk's mount
-// path (e.g. /var/data/droptok.db) so data survives deploys/restarts.
+// an attached persistent disk, set DB_PATH to the disk's mount path
+// (e.g. /var/data/droptok.db) so data survives deploys/restarts.
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'droptok.db');
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const db = new DatabaseSync(dbPath);
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA foreign_keys = ON');
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
