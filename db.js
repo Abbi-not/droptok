@@ -201,17 +201,7 @@ async function init() {
     const p6 = insertProd.run(r3.lastInsertRowid, 'Spicy Chicken Pizza', 460, 'NEW! Spicy chicken, jalapeños.');
     const p7 = insertProd.run(r4.lastInsertRowid, 'Mango Smoothie', 120, 'Fresh mango, no added sugar.');
 
-    const insertVid = db.prepare(`INSERT INTO videos (restaurant_id, user_id, product_id, caption, thumbnail_emoji, is_challenge, challenge_tag, sponsored, discount_pct, likes_count) VALUES (?,?,?,?,?,?,?,?,?,?)`);
-    insertVid.run(r2.lastInsertRowid, owner2.lastInsertRowid, p3.lastInsertRowid, 'This is the best fried chicken in Hawassa 😭🔥', '🍗', 0, null, 0, 0, 412);
-    insertVid.run(r1.lastInsertRowid, owner1.lastInsertRowid, p1.lastInsertRowid, 'Watch us make our new burger 👀🍔', '🍔', 0, null, 0, 0, 289);
-    insertVid.run(r1.lastInsertRowid, owner1.lastInsertRowid, p1.lastInsertRowid, 'POV: You ordered our XL smash burger…', '🎬', 0, null, 0, 0, 198);
-    insertVid.run(r3.lastInsertRowid, owner3.lastInsertRowid, p6.lastInsertRowid, 'NEW spicy chicken pizza 🔥', '🍕', 0, null, 0, 0, 156);
-    insertVid.run(r3.lastInsertRowid, owner3.lastInsertRowid, p5.lastInsertRowid, 'Watch us make 100 pizzas in 2 hours 😂', '🎬', 0, null, 0, 0, 731);
-    insertVid.run(r2.lastInsertRowid, owner2.lastInsertRowid, p4.lastInsertRowid, 'Can you finish our Nuclear Wings? 🌶️🔥', '🌶️', 1, 'spicy-challenge', 0, 0, 522);
-    insertVid.run(r4.lastInsertRowid, owner1.lastInsertRowid, p7.lastInsertRowid, 'Buy 1 get 1 free for the next 30 mins ⏰', '🥤', 0, null, 1, 20, 87);
-    insertVid.run(r1.lastInsertRowid, cust1.lastInsertRowid, p2.lastInsertRowid, 'Trying the new cheeseburger from Burger Lab 🍔', '📱', 0, null, 0, 0, 64);
-
-    console.log('Seeded database with demo data.');
+    console.log('Seeded database with demo data (no mock videos — feed starts empty).');
     console.log('Demo logins (phone / password):');
     console.log('  Customer:  0911111111 / pass123');
     console.log('  Owner:     0933333333 / pass123 (Burger Lab)');
