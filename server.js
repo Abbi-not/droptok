@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-require('./db'); // initializes + seeds sqlite db on first run
+const db = require('./db'); // initializes + seeds sqlite db on first run (async, see db.ready)
 
 const app = express();
 app.use(cors());
@@ -26,6 +26,13 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🍔📱 DropTok API running on http://localhost:${PORT}`);
-});
+db.ready
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🍔📱 DropTok API running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });
